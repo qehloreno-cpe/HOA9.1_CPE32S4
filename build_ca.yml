@@ -1,0 +1,26 @@
+---
+- name: Create CA with SSL in Control Node
+  hosts: control_node
+  gather_facts: false
+  tasks:
+    - name: Install required packages
+      package:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - openssl
+      become: true
+
+    - name: Generate CA private key
+      command: openssl genrsa -out /etc/pki/ca.key 2048
+      become: true
+
+    - name: Generate CA certificate
+      command: openssl req -x509 -new -nodes -key /etc/pki/ca.key -sha256 -days 365 -out /etc/pki/ca.crt -subj "/C=US/ST=State/L=Location/O=Organization/OU=Unit/CN=ExampleCA"
+      become: true
+
+    - name: Copy CA certificate to manage node
+      fetch:
+        src: /etc/pki/ca.crt
+        dest: /tmp
+      become: true
